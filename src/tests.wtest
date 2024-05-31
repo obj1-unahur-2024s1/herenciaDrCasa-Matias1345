@@ -1,0 +1,94 @@
+import enfermedad.*
+import persona.*
+
+describe "Casos de Enfermedad"{
+	//Enfermedades
+	const malaria = new EnfermedadInfecciosa(celulasAmenazadas = 500)
+	const malariaCameron = new EnfermedadInfecciosa(celulasAmenazadas = 500)
+	const malariaHouse = new EnfermedadInfecciosa(celulasAmenazadas = 500)
+	const otitis = new EnfermedadInfecciosa(celulasAmenazadas = 100)
+	const lupus = new EnfermedadAutoinmune(celulasAmenazadas = 10000)
+	const malariaPeligrosa = new EnfermedadInfecciosa(celulasAmenazadas = 800)
+	const muerte = new Muerte(celulasAmenazadas = 0)
+	
+	//Personas
+	const logan = new Persona(temperatura = 36, celulas = 3000000)
+	const frank = new Persona(temperatura = 36, celulas = 3500000)
+	
+	//Medico
+	const cameron = new Medico(temperatura = 36, celulas = 3000000, dosis = 10)
+	
+	//Jefe Medico
+	const house = new JefeMedico(temperatura = 36, celulas = 3500000, dosis = 20)
+	
+	method initialize(){ //Logan inicia ya enfermo 
+		logan.contraerEnfermedad(malaria)
+		logan.contraerEnfermedad(otitis)
+		logan.contraerEnfermedad(lupus)
+	}
+	
+	//Tests temporada 1
+	test "Frank contrae malaria"{
+		frank.contraerEnfermedad(malariaPeligrosa)	
+		malariaPeligrosa.producirEfectoEn(frank)
+		assert.equals(36.8,frank.obtenerTemperatura())
+	}
+	
+	test "La malaria de Logan se reproduce y pasa un dia con sus 3 enfermedades"{
+		malaria.reproducirse()
+		logan.vivirUnDia()
+		assert.equals(37.1,logan.obtenerTemperatura())
+		assert.equals(2990000,logan.obtenerCelulas())
+	}
+	
+	test "Celulas de Logan amenazadas por enfermedades agresivas"{
+		assert.equals(0,logan.celulasAmenazadasPorEnfAgresivas())
+	}
+	
+	test "Enfermedad de Logan que mas celulas afecta"{
+		assert.equals(lupus,logan.enfermedadQueMasCelAfecta())
+	}
+	
+	test "Verificacion de si Logan esta en coma"{
+		assert.notThat(logan.estaEnComa())
+	}
+	
+	//Tests temporada 2
+	test "La malaria se atenua en 100 celulas"{
+		malaria.atenuar(100)
+		assert.equals(400,malaria.obtenerCelulasAmenazadas())
+	}	
+	
+	test "El lupus se atenua en 500 celulas"{
+		lupus.atenuar(500)
+		assert.equals(9500,lupus.obtenerCelulasAmenazadas())
+	}
+	
+	test "Cameron atiende a Logan"{
+		cameron.atenderA(logan)
+		assert.equals(350,malaria.obtenerCelulasAmenazadas())
+		assert.equals(0,otitis.obtenerCelulasAmenazadas())
+		assert.equals(9850,lupus.obtenerCelulasAmenazadas())
+		assert.that(logan.estaEnfermo())
+		assert.notThat(logan.estaCurado())
+	}	
+	
+	test "House atiene a Cameron"{
+		cameron.contraerEnfermedad(malaria)
+		house.atenderA(cameron,house)
+		assert.equals(350,malaria.obtenerCelulasAmenazadas()) //Cameron se atiende a si mismo porque es medico
+	}
+	
+	test "Cameron y House contraen Malarias distintas"{
+		cameron.contraerEnfermedad(malariaCameron)
+		house.contraerEnfermedad(malariaHouse)
+		assert.equals([malariaCameron],cameron.obtenerEnfermedades())
+		assert.equals([malariaHouse],house.obtenerEnfermedades())
+	}
+	
+	test "House contrae la Muerte"{
+		house.contraerEnfermedad(muerte)
+		house.vivirUnDia()
+		assert.notThat(house.estaVivo())
+	}
+}
